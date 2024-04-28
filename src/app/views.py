@@ -78,8 +78,10 @@ def search_view(request):
         search_term = request.GET['q']
         search_results = Dota2Item.objects.filter(
             market_hash_name__icontains=search_term) if search_term else []
-        messages.success(request, f"Found success {
-                         search_results.count()} items")
+        messages.success(
+            request,
+            f"Found success {search_results.count()} items"
+        )
         return render(request, 'search.html',  {'search_results': search_results, 'search_term': search_term})
 
 
