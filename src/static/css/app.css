@@ -8,3 +8,10 @@
     width: 100%;
   }
 }
+
+p {
+  margin: 0 !important;
+}
+ul {
+  padding: 0 !important;
+}
