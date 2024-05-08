@@ -1,7 +1,4 @@
 from django.db import models
-from django.core.exceptions import ValidationError
-
-# Create your models here.
 
 
 class Dota2Item(models.Model):
@@ -24,19 +21,9 @@ class Dota2Item(models.Model):
     for_who = models.CharField(
         max_length=256, null=True, blank=True, verbose_name="for"
     )
-    # received = models.CharField(max_length=256, null=True, blank=True)
-    # paid = models.CharField(max_length=256, null=True, blank=True)
     amount = models.CharField(max_length=256, null=True, blank=True)
     custom_id = models.CharField(max_length=256, null=True, blank=True)
     currency = models.CharField(max_length=256, choices=CURRENSY)
-
-    def clean(self):
-        if not self.received and not self.paid:
-            raise ValidationError(
-                "At least one of received or paid must have a value.")
-        if self.received and self.paid:
-            raise ValidationError(
-                "Only one of received or paid can have a value.")
 
     def __str__(self):
         return self.market_hash_name
