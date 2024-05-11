@@ -4,10 +4,30 @@ from .models import Dota2Item
 import requests
 import datetime
 
+TODAY = datetime.datetime.now().date()
+
+
+def get_current_date():
+    # Format the date as YYYY-MM-DD
+    formatted_date = TODAY.strftime('%Y-%m-%d')
+    return formatted_date
+
+
+def get_date_from_timestamp(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp)
+
+
+def date_to_timestamp(date):
+    # Assuming date is in the format YYYY-MM-DD
+    year, month, day = map(int, date.split('-'))
+    dt = datetime.datetime(year, month, day)
+    return dt.timestamp()
+
 
 def get_resource():
+    # Get API data from server
     r = requests.get(
-        'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24')
+        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={date_to_timestamp(get_current_date())}')
 
     return r.json()
 
@@ -34,10 +54,6 @@ def get_all_items_by_name(name):
     items = Dota2Item.objects.filter(
         market_hash_name=name).order_by('-time')
     return items
-
-
-def get_date_from_timestamp(timestamp):
-    return datetime.datetime.fromtimestamp(timestamp)
 
 
 def index(request):
@@ -71,10 +87,11 @@ def index(request):
         if item.stage == '5':
             item.delete()
     data = Dota2Item.objects.all()
+
     messages.success(request, f'We get {data.count()} items!')
 
     context = {
-        'unique_items': get_all_unique_items(),
+        'uq_items': get_all_unique_items()[:25]
     }
 
     return render(request, 'index.html', context)
@@ -94,7 +111,6 @@ def search_view(request):
 
 
 def detail_item(request, item_id):
-    import datetime
     single_item = get_object_or_404(Dota2Item, item_id=item_id)
 
     sells = []

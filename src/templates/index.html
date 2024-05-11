@@ -13,10 +13,10 @@
 
 <body>
   <div class="container">
-    <header class="d-flex flex-wrap align-items-center justify-content-md-between py-3 mb-4 border-bottom">
-      <div class="col-md-3 mb-2 mb-md-0">
-        <a href="{% url 'index' %}" class="d-inline-flex link-body-emphasis text-decoration-none">
-          <img src="{% static 'assets/dota-2.png' %}" alt="Logo" width="50px" height="50px" style="opacity: 0.5" />
+    <header class="d-sm-flex align-items-center justify-content-between mb-4 border-bottom">
+      <div class="col-md-3 mb-2 mb-md-0 text-center text-md-start">
+        <a href="{% url 'index' %}" class="d-inline-flex link-body-emphasis text-decoration-none my-3">
+          <img src="{% static 'assets/dota-2.png' %}" alt="Logo" width="50px" height="50px" style="opacity: 0.4" />
         </a>
       </div>
 
@@ -34,7 +34,8 @@
           <li><a href="#" class="nav-link px-2 text-secondary">FAQs</a></li>
           <li><a href="#" class="nav-link px-2 text-secondary">About</a></li>
         </ul> -->
-        <form class="col-12 col-lg-auto mb-3 mb-lg-0 mx-lg-3 d-flex align-items-center justify-content-between"
+        <form
+          class="col-12 col-lg-auto mb-3 mb-sm-0 mb-md-0 mb-lg-0 mx-lg-3 d-flex align-items-center justify-content-between"
           role="search" action="{% url 'search' %}" method="GET">
           <input type="search" name="q" class="form-control" placeholder="Search..." aria-label="Search" />
         </form>
@@ -55,8 +56,8 @@
   {% block main %}
   <h1 class="display-5 my-5 text-center">My latest items Dota 2</h1>
   <div class="container">
-    <div class="d-flex justify-content-between flex-wrap">
-      {% for item in unique_items %}
+    <div class="d-flex justify-content-between flex-wrap card-container">
+      {% for item in uq_items %}
       <div class="card">
         <!-- <img src="..." class="card-img-top" alt="..."> -->
         <div class="card-body">
@@ -91,6 +92,9 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
+  {% block scripts %}
+  <script src="{% static 'js/paginator.js' %}"></script>
+  {% endblock scripts %}
 </body>
 
 </html>
