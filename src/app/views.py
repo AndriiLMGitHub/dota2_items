@@ -1,8 +1,9 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from .models import Dota2Item
 import requests
 import datetime
+from django.utils.datastructures import MultiValueDictKeyError
 
 TODAY = datetime.datetime.now().date()
 
@@ -29,7 +30,15 @@ def get_resource():
     r = requests.get(
         f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={date_to_timestamp(get_current_date())}')
 
-    return r.json()
+    resourse_data = r.json()['data']
+
+    for item in resourse_data:
+        if item['stage'] == '5':
+            resourse_data.remove(item)
+        else:
+            continue
+
+    return resourse_data
 
 
 def get_all_unique_names():
@@ -56,7 +65,7 @@ def get_all_items_by_name(name):
     return items
 
 
-def index(request):
+def create_db():
     # Get all items from API server
     data = get_resource()
 
@@ -64,7 +73,7 @@ def index(request):
 
     # Save all items from API server into our database
     if data:
-        for item in data['data']:
+        for item in data:
             inst_item = Dota2Item.objects.create(
                 market_hash_name=item['market_hash_name'],
                 class_name=item['class'],
@@ -80,18 +89,40 @@ def index(request):
             )
             inst_item.save()
 
-    # Get all items from our database
-    data = Dota2Item.objects.all()
-    # Delete all items with stage = 5 (TRADE_STAGE_TIMED_OUT = 5)
-    for item in data:
-        if item.stage == '5':
-            item.delete()
-    data = Dota2Item.objects.all()
 
-    messages.success(request, f'We get {data.count()} items!')
+def get_all_id_from_items():
+    id_list = Dota2Item.objects.values_list('item_id', flat=True)
+    return list(id_list)
+
+
+def index(request):
+    data_items = get_resource()
+    ids_from_db = get_all_id_from_items()
+
+    if list(Dota2Item.objects.all()) == []:
+        create_db()
+        messages.success(request, 'Created new database')
+
+    for i in range(len(data_items)):
+        if data_items[i]['item_id'] == ids_from_db[i]:
+            new_item = Dota2Item.objects.create(
+                market_hash_name=data_items[i]['market_hash_name'],
+                class_name=data_items[i]['class'],
+                instance=data_items[i]['instance'],
+                time=get_date_from_timestamp(int(data_items[i]['time'])),
+                event=data_items[i]['event'],
+                app=data_items[i]['app'],
+                stage=data_items[i]['stage'],
+                for_who=data_items[i]['for'],
+                amount=data_items[i]['paid'] if 'paid' in data_items[i] else data_items[i]['received'],
+                custom_id=data_items[i]['custom_id'],
+                currency=data_items[i]['currency']
+            )
+            new_item.save()
+            messages.success(request, 'Added new item')
 
     context = {
-        'uq_items': get_all_unique_items()[:25]
+        'latest_items': Dota2Item.objects.all().order_by('-time')[:5]
     }
 
     return render(request, 'index.html', context)
@@ -99,15 +130,20 @@ def index(request):
 
 def search_view(request):
     if request.method == 'GET':
-        # Get the search term from the query parameters
-        search_term = request.GET['q']
+        search_term = request.GET.get('q')
         search_results = Dota2Item.objects.filter(
             market_hash_name__icontains=search_term)[:1] if search_term else []
-        messages.success(
-            request,
-            f"Found success {search_results.count()} items"
-        )
-        return render(request, 'search.html',  {'search_results': search_results, 'search_term': search_term})
+        if search_results:
+            messages.success(
+                request,
+                f"Found success item {search_results.count()}"
+            )
+        else:
+            messages.error(
+                request,
+                f"No results found"
+            )
+    return render(request, 'search.html', {'search_results': search_results})
 
 
 def detail_item(request, item_id):

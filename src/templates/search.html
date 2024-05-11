@@ -20,6 +20,7 @@
                     <b>{{ item.amount }}</b>
                     <small style="font-size: 1.2rem">{{ item.currency }}</small>
                 </p>
+                <p class="lead text-muted fs-6 mb-2">{{ item.time }}</p>
                 <a href="{% url 'detail_item' item.item_id %}" class="btn btn-sm btn-outline-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                         class="bi bi-book-half" viewBox="0 0 16 16">
