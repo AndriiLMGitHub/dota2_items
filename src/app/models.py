@@ -10,11 +10,12 @@ class Dota2Item(models.Model):
     CURRENSY = (
         ("RUB", "RUB"),
     )
-    item_id = models.AutoField(primary_key=True, unique=True)
+    item_id = models.CharField(max_length=128)
     market_hash_name = models.CharField(max_length=256)
-    class_name = models.CharField(max_length=256, verbose_name="class")
+    class_name = models.CharField(
+        max_length=256, verbose_name="class", null=True, blank=True)
     instance = models.CharField(max_length=256)
-    time = models.CharField(max_length=256)
+    time = models.CharField(max_length=256, null=True, blank=True)
     event = models.CharField(max_length=256, choices=EVENTS)
     app = models.PositiveIntegerField()
     stage = models.CharField(max_length=256)

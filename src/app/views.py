@@ -26,17 +26,12 @@ def date_to_timestamp(date):
 
 
 def get_resource():
+    timestamp_now = round(date_to_timestamp(get_current_date()))
     # Get API data from server
     r = requests.get(
-        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={date_to_timestamp(get_current_date())}')
+        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={timestamp_now}')
 
     resourse_data = r.json()['data']
-
-    for item in resourse_data:
-        if item['stage'] == '5':
-            resourse_data.remove(item)
-        else:
-            continue
 
     return resourse_data
 
@@ -75,6 +70,7 @@ def create_db():
     if data:
         for item in data:
             inst_item = Dota2Item.objects.create(
+                item_id=item['item_id'],
                 market_hash_name=item['market_hash_name'],
                 class_name=item['class'],
                 instance=item['instance'],
@@ -89,6 +85,10 @@ def create_db():
             )
             inst_item.save()
 
+    for item in Dota2Item.objects.all():
+        if item.stage == "5":
+            item.delete()
+
 
 def get_all_id_from_items():
     id_list = Dota2Item.objects.values_list('item_id', flat=True)
@@ -96,30 +96,29 @@ def get_all_id_from_items():
 
 
 def index(request):
-    data_items = get_resource()
+    data_items = Dota2Item.objects.all()
     ids_from_db = get_all_id_from_items()
 
-    if list(Dota2Item.objects.all()) == []:
-        create_db()
-        messages.success(request, 'Created new database')
+    create_db()
+    messages.success(request, 'Created new database')
 
-    for i in range(len(data_items)):
-        if data_items[i]['item_id'] == ids_from_db[i]:
-            new_item = Dota2Item.objects.create(
-                market_hash_name=data_items[i]['market_hash_name'],
-                class_name=data_items[i]['class'],
-                instance=data_items[i]['instance'],
-                time=get_date_from_timestamp(int(data_items[i]['time'])),
-                event=data_items[i]['event'],
-                app=data_items[i]['app'],
-                stage=data_items[i]['stage'],
-                for_who=data_items[i]['for'],
-                amount=data_items[i]['paid'] if 'paid' in data_items[i] else data_items[i]['received'],
-                custom_id=data_items[i]['custom_id'],
-                currency=data_items[i]['currency']
-            )
-            new_item.save()
-            messages.success(request, 'Added new item')
+    # for i in range(len(data_items)):
+    #     if data_items[i]['item_id'] == ids_from_db[i]:
+    #         new_item = Dota2Item.objects.create(
+    #             market_hash_name=data_items[i]['market_hash_name'],
+    #             class_name=data_items[i]['class'],
+    #             instance=data_items[i]['instance'],
+    #             time=get_date_from_timestamp(int(data_items[i]['time'])),
+    #             event=data_items[i]['event'],
+    #             app=data_items[i]['app'],
+    #             stage=data_items[i]['stage'],
+    #             for_who=data_items[i]['for'],
+    #             amount=data_items[i]['paid'] if 'paid' in data_items[i] else data_items[i]['received'],
+    #             custom_id=data_items[i]['custom_id'],
+    #             currency=data_items[i]['currency']
+    #         )
+    #         new_item.save()
+    #         messages.success(request, 'Added new item')
 
     context = {
         'latest_items': Dota2Item.objects.all().order_by('-time')[:5]
