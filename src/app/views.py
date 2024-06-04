@@ -96,11 +96,10 @@ def get_all_id_from_items():
 
 
 def index(request):
-    # data_items = Dota2Item.objects.all()
-    # ids_from_db = get_all_id_from_items()
 
-    # create_db()
-    # messages.success(request, 'Created new database')
+    if Dota2Item.objects.all() == []:
+        create_db()
+        messages.success(request, 'Created new database')
 
     # for i in range(len(data_items)):
     #     if data_items[i]['item_id'] == ids_from_db[i]:
