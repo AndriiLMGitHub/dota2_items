@@ -3,8 +3,8 @@ from django.db import models
 
 class Dota2Item(models.Model):
     EVENTS = (
-        ("Buy", "buy"),
-        ("Sell", "sell"),
+        ("buy", "buy"),
+        ("sell", "sell"),
     )
 
     CURRENSY = (
