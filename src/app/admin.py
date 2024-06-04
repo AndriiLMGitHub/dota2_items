@@ -3,7 +3,7 @@ from .models import Dota2Item, Dota2ItemImage
 
 
 class Dota2ItemAdmin(admin.ModelAdmin):
-    list_display = ('item_id', 'market_hash_name', 'class_name')
+    list_display = ('market_hash_name', 'event', 'amount')
     search_fields = ('market_hash_name', )
 
 
