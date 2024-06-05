@@ -131,7 +131,7 @@ def get_interval_request():
         except requests.RequestException as e:
             print(f"Request error: {e}")
 
-        time.sleep(2)  # Sleep for one hour (3600 seconds)
+        time.sleep(3600)  # Sleep for one hour (3600 seconds)
 
 
 def index(request):
