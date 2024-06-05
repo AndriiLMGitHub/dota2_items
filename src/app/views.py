@@ -3,9 +3,11 @@ from django.contrib import messages
 from .models import Dota2Item
 import requests
 import datetime
+import time
 from django.utils.datastructures import MultiValueDictKeyError
 
 TODAY = datetime.datetime.now().date()
+YESTERDAY = TODAY - datetime.timedelta(days=1)
 
 
 def get_current_date():
@@ -25,11 +27,15 @@ def date_to_timestamp(date):
     return dt.timestamp()
 
 
+TIMESTAMP_NOW = round(date_to_timestamp(get_current_date()))
+TIMESTAMP_YESTERDAY = round(
+    date_to_timestamp(YESTERDAY.strftime('%Y-%m-%d')))
+
+
 def get_resource():
-    timestamp_now = round(date_to_timestamp(get_current_date()))
     # Get API data from server
     r = requests.get(
-        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={timestamp_now}')
+        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={TIMESTAMP_NOW}')
 
     resourse_data = r.json()['data']
 
@@ -95,29 +101,46 @@ def get_all_id_from_items():
     return list(id_list)
 
 
+def get_interval_request():
+    while True:
+        try:
+            response = requests.get(
+                f"https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date={TIMESTAMP_YESTERDAY}&date_end={TIMESTAMP_NOW}")
+            if response.status_code == 200:
+                if response.json()['data'] != []:
+                    for item in response.json()['data']:
+                        new_item = Dota2Item.objects.create(
+                            item_id=item['item_id'],
+                            market_hash_name=item['market_hash_name'],
+                            class_name=item['class'],
+                            instance=item['instance'],
+                            time=get_date_from_timestamp(int(item['time'])),
+                            event=item['event'],
+                            app=item['app'],
+                            stage=item['stage'],
+                            for_who=item['for'],
+                            amount=item['paid'] if 'paid' in item else item['received'],
+                            custom_id=item['custom_id'],
+                            currency=item['currency']
+                        )
+                        new_item.save()
+                print("Request successful:", response.json()['data'])
+                return
+            else:
+                print(f"Request failed: {response.status_code}")
+        except requests.RequestException as e:
+            print(f"Request error: {e}")
+
+        time.sleep(2)  # Sleep for one hour (3600 seconds)
+
+
 def index(request):
 
     if Dota2Item.objects.all() == []:
         create_db()
         messages.success(request, 'Created new database')
 
-    # for i in range(len(data_items)):
-    #     if data_items[i]['item_id'] == ids_from_db[i]:
-    #         new_item = Dota2Item.objects.create(
-    #             market_hash_name=data_items[i]['market_hash_name'],
-    #             class_name=data_items[i]['class'],
-    #             instance=data_items[i]['instance'],
-    #             time=get_date_from_timestamp(int(data_items[i]['time'])),
-    #             event=data_items[i]['event'],
-    #             app=data_items[i]['app'],
-    #             stage=data_items[i]['stage'],
-    #             for_who=data_items[i]['for'],
-    #             amount=data_items[i]['paid'] if 'paid' in data_items[i] else data_items[i]['received'],
-    #             custom_id=data_items[i]['custom_id'],
-    #             currency=data_items[i]['currency']
-    #         )
-    #         new_item.save()
-    #         messages.success(request, 'Added new item')
+    get_interval_request()
 
     context = {
         'latest_items': Dota2Item.objects.all().order_by('-time')[:5]
