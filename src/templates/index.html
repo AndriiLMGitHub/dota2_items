@@ -62,7 +62,7 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th scope="col">#</th>
+            <!-- <th scope="col">#</th> -->
             <th scope="col">Name</th>
             <th scope="col">Time</th>
             <th scope="col">Event</th>
@@ -71,8 +71,8 @@
         <tbody>
           {% for item in latest_items %}
           <tr>
-            <th scope="row">{{ item.item_id }}</th>
-            <td><a href="{% url 'detail_item' item.item_id %}">{{ item.market_hash_name }}</a></td>
+            <!-- <th scope="row">{{ item.item_id }}</th> -->
+            <td><a href="{% url 'detail_item' item.pk %}">{{ item.market_hash_name }}</a></td>
             <td>{{ item.time }}</td>
             <td>{{ item.event }}</td>
           </tr>

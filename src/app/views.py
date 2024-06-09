@@ -4,7 +4,7 @@ from .models import Dota2Item
 import requests
 import datetime
 import time
-from django.utils.datastructures import MultiValueDictKeyError
+import pytz
 
 TODAY = datetime.datetime.now().date()
 YESTERDAY = TODAY - datetime.timedelta(days=1)
@@ -20,6 +20,14 @@ def get_date_from_timestamp(timestamp):
     return datetime.datetime.fromtimestamp(timestamp)
 
 
+def get_kiyv_current_timestamp():
+    # # Define the timezone for Kyiv
+    kyiv_tz = pytz.timezone('Europe/Kyiv')
+    # # Get the current time in Kyiv
+    kyiv_time = datetime.datetime.now(kyiv_tz)
+    return kyiv_time.timestamp()
+
+
 def date_to_timestamp(date):
     # Assuming date is in the format YYYY-MM-DD
     year, month, day = map(int, date.split('-'))
@@ -28,14 +36,17 @@ def date_to_timestamp(date):
 
 
 TIMESTAMP_NOW = round(date_to_timestamp(get_current_date()))
+TIMESTAMP_KYIV_NOW = round(get_kiyv_current_timestamp())
 TIMESTAMP_YESTERDAY = round(
     date_to_timestamp(YESTERDAY.strftime('%Y-%m-%d')))
+# TIMESTAMP_YESTERDAY_KYIV = round(
+#     date_to_timestamp(YESTERDAY.strftime('%Y-%m-%d')))
 
 
 def get_resource():
     # Get API data from server
     r = requests.get(
-        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={TIMESTAMP_NOW}')
+        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={TIMESTAMP_KYIV_NOW}')
 
     resourse_data = r.json()['data']
 
@@ -105,7 +116,7 @@ def get_interval_request():
     while True:
         try:
             response = requests.get(
-                f"https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date={TIMESTAMP_YESTERDAY}&date_end={TIMESTAMP_NOW}")
+                f"https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date={TIMESTAMP_YESTERDAY}&date_end={TIMESTAMP_KYIV_NOW}")
             if response.status_code == 200:
                 if response.json()['data'] != []:
                     for item in response.json()['data']:
@@ -124,7 +135,7 @@ def get_interval_request():
                             currency=item['currency']
                         )
                         new_item.save()
-                print("Request successful:", response.json()['data'])
+                # print("Request successful:", response.json()['data'])
                 return
             else:
                 print(f"Request failed: {response.status_code}")
@@ -136,11 +147,13 @@ def get_interval_request():
 
 def index(request):
 
-    if Dota2Item.objects.all() == []:
+    if list(Dota2Item.objects.all()) == []:
         create_db()
         messages.success(request, 'Created new database')
 
-    get_interval_request()
+    # get_interval_request()
+    print(TIMESTAMP_YESTERDAY)
+    print(TIMESTAMP_KYIV_NOW)
 
     context = {
         'latest_items': Dota2Item.objects.all().order_by('-time')[:5]
@@ -167,8 +180,8 @@ def search_view(request):
     return render(request, 'search.html', {'search_results': search_results})
 
 
-def detail_item(request, item_id):
-    single_item = get_object_or_404(Dota2Item, item_id=item_id)
+def detail_item(request, pk):
+    single_item = get_object_or_404(Dota2Item, pk=pk)
 
     sells = []
     buys = []
