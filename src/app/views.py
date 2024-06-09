@@ -152,8 +152,6 @@ def index(request):
         messages.success(request, 'Created new database')
 
     # get_interval_request()
-    print(TIMESTAMP_YESTERDAY)
-    print(TIMESTAMP_KYIV_NOW)
 
     context = {
         'latest_items': Dota2Item.objects.all().order_by('-time')[:5]
