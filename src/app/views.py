@@ -46,7 +46,7 @@ TIMESTAMP_YESTERDAY = round(
 def get_resource():
     # Get API data from server
     r = requests.get(
-        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1669852800&date_end={TIMESTAMP_KYIV_NOW}')
+        f'https://market.dota2.net/api/v2/history?key=n238hokFW7n38ZDTqxB32rT29YCWH24&date=1722076201&date_end={TIMESTAMP_NOW}')
 
     resourse_data = r.json()['data']
 
